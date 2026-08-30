@@ -522,7 +522,7 @@
         showDash();
       }).catch(function () {
         loginStatus.style.color = 'var(--bad)';
-        loginStatus.textContent = 'Network error — try again.';
+        loginStatus.textContent = 'Network error. Please try again.';
       });
   });
 
@@ -625,7 +625,7 @@
         'Authorization': 'Bearer ' + session.access_token
       }
     }).then(function (res) {
-      if (res.status === 401) { showLogin('Session expired — sign in again.'); return null; }
+      if (res.status === 401) { showLogin('Session expired. Please sign in again.'); return null; }
       if (!res.ok) throw new Error('Request failed (' + res.status + ')');
       return res.json();
     }).then(function (data) {

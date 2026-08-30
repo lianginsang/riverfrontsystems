@@ -961,7 +961,7 @@
         </form>
         <p class="bubble-status" id="brief-status" aria-live="polite"></p>
       </div>
-      <p class="bubble-hint">Web &amp; mobile builds, launch, and the AI automation to run it after — mostly on retainer. Prefer email? <a href="mailto:hello@riverfrontsystems.co">hello@riverfrontsystems.co</a></p>
+      <p class="bubble-hint">Web and mobile builds, launch, and the AI automation to run it after, mostly on retainer. Prefer email? <a href="mailto:hello@riverfrontsystems.co">hello@riverfrontsystems.co</a></p>
     </div>
   </section>
 
@@ -976,7 +976,7 @@
       <div class="services reveal">
         <div class="service">
           <h3>Web &amp; Mobile Development</h3>
-          <p>Websites, web apps, and mobile apps — built as real, working software for what your business actually does.</p>
+          <p>Websites, web apps, and mobile apps built as real, working software for what your business actually does.</p>
         </div>
         <div class="service">
           <h3>Hosting</h3>
@@ -984,7 +984,7 @@
         </div>
         <div class="service">
           <h3>AI Features</h3>
-          <p>AI built into the product itself — automation, in-app AI agents, and workflows that act rather than just display information.</p>
+          <p>AI built right into the product, including automation, in-app AI agents, and workflows that act instead of just displaying information.</p>
         </div>
         <div class="service">
           <h3>Scaling</h3>
@@ -999,7 +999,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">/ PROCESS</div>
         <h2 class="section-title">How an engagement runs</h2>
-        <p class="section-desc">Every engagement moves through the same four stages — the first two get you to launch, the last two are the retainer.</p>
+        <p class="section-desc">Every engagement moves through the same four stages. The first two get you to launch, and the last two are the retainer.</p>
       </div>
 
       <div class="pipeline reveal">
@@ -1035,8 +1035,8 @@
         <div class="why-copy reveal">
           <div class="eyebrow" style="margin-bottom:16px">/ RETAINER</div>
           <h2 class="section-title">Why we work on retainer</h2>
-          <p>Software isn't done at launch — it's done being <em>built</em>. What breaks, what your users actually want next, and what should be automated only becomes clear once real people are using the thing.</p>
-          <p>A retainer means <strong>the team that built it is still the team running it</strong> — no re-onboarding a new agency every time something needs to change, and no six-week proposal cycle to fix a bug.</p>
+          <p>Software isn't done at launch. It's done being <em>built</em>. What breaks, what your users actually want next, and what should be automated only becomes clear once real people are using the thing.</p>
+          <p>A retainer means <strong>the team that built it is still the team running it</strong>, so there's no re-onboarding a new agency every time something needs to change, and no six-week proposal cycle to fix a bug.</p>
           <p>Engagements are month-to-month. Scope flexes with what the product needs that month; the team doesn't turn over.</p>
         </div>
         <div class="reveal">
@@ -1076,7 +1076,7 @@
       <div class="faq reveal">
         <details class="faq-item">
           <summary>Do you take one-off projects, or only retainers?</summary>
-          <p>Most engagements start as a scoped build — design through launch — and move to a retainer afterward. If you only need a fixed-scope build with no ongoing work, we'll say so upfront rather than push a retainer you don't need.</p>
+          <p>Most engagements start as a scoped build, from design through launch, and move to a retainer afterward. If you only need a fixed-scope build with no ongoing work, we'll say so upfront rather than push a retainer you don't need.</p>
         </details>
         <details class="faq-item">
           <summary>What does "AI automation" actually mean here?</summary>
@@ -1088,7 +1088,7 @@
         </details>
         <details class="faq-item">
           <summary>What size company do you work with?</summary>
-          <p>Mostly early-stage and growth-stage companies who need a full product team without hiring one — founders shipping a first version, or teams whose product has outgrown a single contractor.</p>
+          <p>Mostly early-stage and growth-stage companies who need a full product team without hiring one, whether that's founders shipping a first version or a team whose product has outgrown a single contractor.</p>
         </details>
       </div>
     </div>
@@ -1099,7 +1099,7 @@
       <div class="cta-band reveal">
         <div>
           <h2>Ready to see if we're a fit?</h2>
-          <p>No form to fill out — just describe the project above and a real person on the team replies within a business day.</p>
+          <p>No form to fill out. Just describe the project above, and a real person on the team replies within a business day.</p>
         </div>
         <div class="cta-actions">
           <a class="btn btn-primary" href="#contact">Describe your project ↑</a>
@@ -1348,10 +1348,10 @@
         form.reset();
         preferredContact = null;
         document.querySelectorAll('.pref-chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
-        setStatus('Thanks — we\'ll reply within a business day.', 'var(--good)');
+        setStatus('Thanks! We\'ll reply within a business day.', 'var(--good)');
         setTimeout(showBriefStep, 1800);
       }).catch(function () {
-        setStatus('Something went wrong — falling back to email…', 'var(--accent)');
+        setStatus('Something went wrong, so we\'re falling back to email…', 'var(--accent)');
         sendByEmail(briefValue, name, phone, email, preferredContact);
       }).finally(function () {
         submitBtn.disabled = false;
