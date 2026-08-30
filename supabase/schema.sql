@@ -22,3 +22,10 @@ create policy "public can insert leads"
   on leads for insert
   to anon
   with check (true);
+
+-- Lets a logged-in Supabase Auth user (you, via admin.html) read leads.
+-- Anon (the public site) still cannot read — insert-only, per above.
+create policy "authenticated can read leads"
+  on leads for select
+  to authenticated
+  using (true);
