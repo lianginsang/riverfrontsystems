@@ -5,7 +5,9 @@ create table if not exists leads (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   name text,
+  phone text not null,
   email text not null,
+  preferred_contact text,
   brief text not null,
   source text not null default 'agency-systems-landing',
   status text not null default 'new'

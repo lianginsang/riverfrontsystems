@@ -395,6 +395,66 @@
   .bubble-contact input::placeholder { color: var(--text-dim); }
   .bubble-contact input:focus { border-top-color: var(--accent); }
 
+  .bubble-contact-step { padding-bottom: 4px; }
+
+  .pref-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 14px 28px 4px;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .pref-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .pref-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pref-chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+  }
+
+  .pref-chip:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .pref-chip[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  }
+
+  .pref-chip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .bubble-back {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+  }
+
+  .bubble-back:hover { color: var(--text); }
+
   .bubble-foot {
     display: flex;
     align-items: center;
@@ -879,23 +939,41 @@
 
       <div class="bubble-wrap" id="contact">
         <div class="bubble-glow" aria-hidden="true"></div>
-        <form class="bubble" id="brief-form">
+        <form class="bubble" id="brief-form" novalidate>
           <div class="bubble-head">
-            <span class="bubble-label">&gt; describe your project</span>
-            <span class="bubble-meta">REPLIES WITHIN 1 BUSINESS DAY</span>
+            <span class="bubble-label" id="bubble-step-label">&gt; describe your project</span>
+            <span class="bubble-meta" id="bubble-step-meta">REPLIES WITHIN 1 BUSINESS DAY</span>
           </div>
-          <textarea
-            id="brief-input"
-            name="brief"
-            rows="3"
-            placeholder="Describe what you want built or done…"
-            aria-label="Describe what you want built or done"
-          ></textarea>
-          <div class="bubble-contact">
-            <input type="text" id="brief-name" name="name" placeholder="Name (optional)" autocomplete="name">
-            <input type="email" id="brief-email" name="email" placeholder="Email" autocomplete="email" required>
+
+          <div id="step-brief">
+            <textarea
+              id="brief-input"
+              name="brief"
+              rows="3"
+              placeholder="Describe what you want built or done…"
+              aria-label="Describe what you want built or done"
+            ></textarea>
           </div>
-          <div class="bubble-foot">
+
+          <div id="step-contact" class="bubble-contact-step" hidden>
+            <div class="bubble-contact">
+              <input type="text" id="lead-name" name="name" placeholder="Name" autocomplete="name">
+              <input type="tel" id="lead-phone" name="phone" placeholder="Phone number" autocomplete="tel" required>
+            </div>
+            <div class="bubble-contact">
+              <input type="email" id="lead-email" name="email" placeholder="Email" autocomplete="email" required style="flex-basis: 100%;">
+            </div>
+            <div class="pref-row" role="group" aria-label="Preferred contact method">
+              <span class="pref-label">Preferred contact</span>
+              <div class="pref-options">
+                <button type="button" class="pref-chip" data-value="text" aria-pressed="false">Text</button>
+                <button type="button" class="pref-chip" data-value="call" aria-pressed="false">Call</button>
+                <button type="button" class="pref-chip" data-value="email" aria-pressed="false">Email</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bubble-foot" id="step-brief-foot">
             <div class="chip-row">
               <button type="button" class="chip" data-fill="Website: ">
                 <span class="dot"></span>Website
@@ -910,7 +988,12 @@
                 <span class="dot"></span>Timeframe
               </button>
             </div>
-            <button type="submit" class="bubble-send">Send →</button>
+            <button type="submit" class="bubble-send">Next →</button>
+          </div>
+
+          <div class="bubble-foot" id="step-contact-foot" hidden>
+            <button type="button" class="bubble-back" id="brief-back-btn">&larr; Back</button>
+            <button type="submit" class="bubble-send" id="brief-submit-btn">Submit →</button>
           </div>
         </form>
         <p class="bubble-status" id="brief-status" aria-live="polite"></p>
@@ -1171,22 +1254,42 @@
     var isConfigured = SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0;
 
     var form = document.getElementById('brief-form');
-    var input = document.getElementById('brief-input');
-    var nameInput = document.getElementById('brief-name');
-    var emailInput = document.getElementById('brief-email');
+    var briefInput = document.getElementById('brief-input');
     var status = document.getElementById('brief-status');
-    var sendBtn = form.querySelector('.bubble-send');
 
-    document.querySelectorAll('.chip').forEach(function (chip) {
+    var stepBrief = document.getElementById('step-brief');
+    var stepContact = document.getElementById('step-contact');
+    var stepBriefFoot = document.getElementById('step-brief-foot');
+    var stepContactFoot = document.getElementById('step-contact-foot');
+    var stepLabel = document.getElementById('bubble-step-label');
+    var stepMeta = document.getElementById('bubble-step-meta');
+
+    var nameInput = document.getElementById('lead-name');
+    var phoneInput = document.getElementById('lead-phone');
+    var emailInput = document.getElementById('lead-email');
+    var submitBtn = document.getElementById('brief-submit-btn');
+    var backBtn = document.getElementById('brief-back-btn');
+
+    var preferredContact = null;
+
+    document.querySelectorAll('.pref-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('.pref-chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        chip.setAttribute('aria-pressed', 'true');
+        preferredContact = chip.getAttribute('data-value');
+      });
+    });
+
+    document.querySelectorAll('.chip[data-fill]').forEach(function (chip) {
       chip.addEventListener('click', function () {
         var prefix = chip.getAttribute('data-fill');
-        if (input.value.trim().length === 0) {
-          input.value = prefix;
-        } else if (!input.value.includes(prefix)) {
-          input.value = input.value.replace(/\s*$/, '') + '\n' + prefix;
+        if (briefInput.value.trim().length === 0) {
+          briefInput.value = prefix;
+        } else if (!briefInput.value.includes(prefix)) {
+          briefInput.value = briefInput.value.replace(/\s*$/, '') + '\n' + prefix;
         }
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
+        briefInput.focus();
+        briefInput.setSelectionRange(briefInput.value.length, briefInput.value.length);
       });
     });
 
@@ -1195,36 +1298,87 @@
       status.style.color = color;
     }
 
-    function sendByEmail(brief) {
+    function showContactStep() {
+      stepBrief.hidden = true;
+      stepBriefFoot.hidden = true;
+      stepContact.hidden = false;
+      stepContactFoot.hidden = false;
+      stepLabel.textContent = '> almost there';
+      stepMeta.textContent = 'STEP 2 OF 2';
+      setStatus('', '');
+      nameInput.focus();
+    }
+
+    function showBriefStep() {
+      stepContact.hidden = true;
+      stepContactFoot.hidden = true;
+      stepBrief.hidden = false;
+      stepBriefFoot.hidden = false;
+      stepLabel.textContent = '> describe your project';
+      stepMeta.textContent = 'REPLIES WITHIN 1 BUSINESS DAY';
+      setStatus('', '');
+    }
+
+    backBtn.addEventListener('click', showBriefStep);
+
+    function sendByEmail(brief, name, phone, email, preferred) {
       var subject = 'New project inquiry';
-      var body = brief + '\n\n—\nSent from the Riverfront Systems site.';
+      var body = [
+        brief,
+        '',
+        '—',
+        'Name: ' + (name || '—'),
+        'Phone: ' + (phone || '—'),
+        'Email: ' + email,
+        'Preferred contact: ' + (preferred || '—'),
+        'Sent from the Riverfront Systems site.'
+      ].join('\n');
       window.location.href = 'mailto:hello@riverfrontsystems.co?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
       setStatus('Opening your email client to send this…', 'var(--good)');
     }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var brief = input.value.trim();
+      var onContactStep = !stepContact.hidden;
+
+      if (!onContactStep) {
+        var brief = briefInput.value.trim();
+        if (!brief) {
+          setStatus('Add a line about what you need before continuing.', 'var(--accent)');
+          briefInput.focus();
+          return;
+        }
+        showContactStep();
+        return;
+      }
+
+      var briefValue = briefInput.value.trim();
+      var name = nameInput.value.trim();
+      var phone = phoneInput.value.trim();
       var email = emailInput.value.trim();
 
-      if (!brief) {
-        setStatus('Add a line about what you need before sending.', 'var(--accent)');
-        input.focus();
+      if (!phone) {
+        setStatus('Add a phone number so we can reach you.', 'var(--accent)');
+        phoneInput.focus();
         return;
       }
       if (!email) {
-        setStatus('Add an email so we can get back to you.', 'var(--accent)');
+        setStatus('Add an email so we can reach you.', 'var(--accent)');
         emailInput.focus();
+        return;
+      }
+      if (!preferredContact) {
+        setStatus('Pick how you\'d prefer to be contacted.', 'var(--accent)');
         return;
       }
 
       if (!isConfigured) {
         // No Supabase project wired up yet — fall back to email.
-        sendByEmail(brief);
+        sendByEmail(briefValue, name, phone, email, preferredContact);
         return;
       }
 
-      sendBtn.disabled = true;
+      submitBtn.disabled = true;
       setStatus('Sending…', 'var(--text-dim)');
 
       fetch(SUPABASE_URL + '/rest/v1/leads', {
@@ -1236,19 +1390,24 @@
           'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
-          name: nameInput.value.trim() || null,
+          name: name || null,
+          phone: phone,
           email: email,
-          brief: brief
+          preferred_contact: preferredContact,
+          brief: briefValue
         })
       }).then(function (res) {
         if (!res.ok) throw new Error('request failed');
         form.reset();
+        preferredContact = null;
+        document.querySelectorAll('.pref-chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
         setStatus('Thanks — we\'ll reply within a business day.', 'var(--good)');
+        setTimeout(showBriefStep, 1800);
       }).catch(function () {
         setStatus('Something went wrong — falling back to email…', 'var(--accent)');
-        sendByEmail(brief);
+        sendByEmail(briefValue, name, phone, email, preferredContact);
       }).finally(function () {
-        sendBtn.disabled = false;
+        submitBtn.disabled = false;
       });
     });
   })();
