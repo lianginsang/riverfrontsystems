@@ -29,3 +29,10 @@ create policy "authenticated can read leads"
   on leads for select
   to authenticated
   using (true);
+
+-- Lets a logged-in Supabase Auth user (you, via admin.html) delete leads.
+-- Anon still cannot delete.
+create policy "authenticated can delete leads"
+  on leads for delete
+  to authenticated
+  using (true);

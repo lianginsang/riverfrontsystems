@@ -393,6 +393,27 @@
     padding-top: 10px;
   }
 
+  .popover-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .delete-btn {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--bad);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--bad) 40%, var(--border));
+    border-radius: 6px;
+    padding: 6px 11px;
+    cursor: pointer;
+  }
+
+  .delete-btn:hover { background: color-mix(in srgb, var(--bad) 12%, transparent); border-color: var(--bad); }
+  .delete-btn:disabled { opacity: 0.5; cursor: default; }
+
   #empty-state, #loading-state, #error-state {
     text-align: center;
     padding: 60px 20px;
@@ -450,8 +471,8 @@
 </div>
 
 <script>
-  var SUPABASE_URL = 'https://upblfyhcukuvuxboslzz.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYmxmeWhjdWt1dnV4Ym9zbHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMzc3MzIsImV4cCI6MjEwMzYxMzczMn0.nDPyIq5u3lRGukVN3IcXWgpzJDTMnFX1A4TS_QgTC8Q';
+  var SUPABASE_URL = '__SUPABASE_URL__';
+  var SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
   var SESSION_KEY = 'rf_admin_session';
 
   var loginView = document.getElementById('login-view');
@@ -582,12 +603,22 @@
             '<div><span class="k">Preferred</span><span class="pref-badge">' + escapeHtml(lead.preferred_contact || '—') + '</span></div>' +
           '</div>' +
           '<div class="popover-brief">' + escapeHtml(brief || 'No project details provided.') + '</div>' +
+          '<div class="popover-actions">' +
+            '<button type="button" class="delete-btn" data-id="' + escapeHtml(lead.id) + '">Delete lead</button>' +
+          '</div>' +
         '</div>';
 
       row.addEventListener('click', function () {
         var alreadyOpen = row.classList.contains('open');
         document.querySelectorAll('.lead-row.open').forEach(function (r) { r.classList.remove('open'); });
         if (!alreadyOpen) row.classList.add('open');
+      });
+
+      var deleteBtn = row.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Delete this lead? This can\'t be undone.')) return;
+        deleteLead(lead.id, deleteBtn);
       });
 
       leadsList.appendChild(row);
@@ -610,6 +641,36 @@
       render();
     });
   });
+
+  function deleteLead(id, btn) {
+    var session = getSession();
+    if (!session) { showLogin(); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+
+    fetch(SUPABASE_URL + '/rest/v1/leads?id=eq.' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Prefer': 'return=representation'
+      }
+    }).then(function (res) {
+      if (res.status === 401) { showLogin('Session expired. Please sign in again.'); return null; }
+      if (!res.ok) throw new Error('Request failed (' + res.status + ')');
+      return res.json();
+    }).then(function (deletedRows) {
+      if (deletedRows === null) return;
+      if (!deletedRows.length) throw new Error('No permission to delete (check the delete policy in Supabase).');
+      allLeads = allLeads.filter(function (lead) { return lead.id !== id; });
+      render();
+    }).catch(function (err) {
+      btn.disabled = false;
+      btn.textContent = 'Delete lead';
+      alert('Could not delete lead: ' + err.message);
+    });
+  }
 
   function loadLeads() {
     var session = getSession();
