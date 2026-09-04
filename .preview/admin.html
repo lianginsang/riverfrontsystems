@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Riverfront Systems — Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --surface: #10161D;
+    --surface-2: #141B23;
+    --border: #232B35;
+    --border-soft: #1A2129;
+    --text: #E8ECF1;
+    --text-muted: #8A97A6;
+    --text-dim: #5C6673;
+    --accent: #E8A33D;
+    --good: #4FAE8E;
+    --bad: #D9695A;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 20%, transparent);
+    flex: none;
+  }
+
+  /* ---------- top bar ---------- */
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .brand {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .brand .tag {
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  #logout-btn {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    display: none;
+  }
+
+  #logout-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* ---------- login screen ---------- */
+
+  #login-view {
+    min-height: calc(100vh - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.5);
+  }
+
+  .login-card h1 {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+
+  .login-card p {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    margin: 0 0 22px;
+  }
+
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    padding: 10px 12px;
+    outline: none;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  #login-form button {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #14100A;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 11px;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  #login-status {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--bad);
+    margin-top: 12px;
+    min-height: 1.4em;
+  }
+
+  /* ---------- dashboard ---------- */
+
+  #dash-view { display: none; padding: 24px 28px 60px; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  #search {
+    flex: 1 1 240px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 9px 12px;
+    outline: none;
+  }
+
+  #search:focus { border-color: var(--accent); }
+
+  .sort-group {
+    display: flex;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .sort-btn {
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .sort-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .sort-btn[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  }
+
+  .count-tag {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .leads-list {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  .lead-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+
+  .lead-row:first-child { border-radius: 10px 10px 0 0; }
+  .lead-row:last-child { border-bottom: none; border-radius: 0 0 10px 10px; }
+  .lead-row:only-child { border-radius: 10px; }
+
+  .lead-row:hover, .lead-row.open {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+
+  .row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .row-name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-snippet {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+  }
+
+  .row-time {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-chevron {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.15s ease;
+  }
+
+  .lead-row:hover .row-chevron, .lead-row.open .row-chevron { transform: rotate(180deg); }
+
+  .pref-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+
+  .lead-popover {
+    position: absolute;
+    top: 100%;
+    left: 10px;
+    right: 10px;
+    z-index: 10;
+    margin-top: 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+    box-shadow: 0 24px 48px -20px rgba(0,0,0,0.55);
+    cursor: default;
+  }
+
+  .lead-row:hover .lead-popover, .lead-row.open .lead-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .popover-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-bottom: 10px;
+    font-size: 13.5px;
+  }
+
+  .popover-grid .k {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .popover-brief {
+    font-size: 13.5px;
+    color: var(--text);
+    white-space: pre-line;
+    line-height: 1.55;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 10px;
+  }
+
+  .popover-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .delete-btn {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--bad);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--bad) 40%, var(--border));
+    border-radius: 6px;
+    padding: 6px 11px;
+    cursor: pointer;
+  }
+
+  .delete-btn:hover { background: color-mix(in srgb, var(--bad) 12%, transparent); border-color: var(--bad); }
+  .delete-btn:disabled { opacity: 0.5; cursor: default; }
+
+  #empty-state, #loading-state, #error-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+    display: none;
+  }
+
+  #error-state { color: var(--bad); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="status-dot"></span>
+    RIVERFRONT SYSTEMS <span class="tag">/ LEADS</span>
+  </div>
+  <button id="logout-btn" type="button">Log out</button>
+</header>
+
+<div id="login-view">
+  <form class="login-card" id="login-form">
+    <h1>Sign in</h1>
+    <p>This page shows submissions from the site's contact form. Access is restricted to your Supabase account.</p>
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+    </div>
+    <button type="submit">Sign in</button>
+    <div id="login-status"></div>
+  </form>
+</div>
+
+<div id="dash-view">
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search name, email, phone, or brief…">
+    <div class="sort-group" role="group" aria-label="Sort leads">
+      <button type="button" class="sort-btn" data-sort="time" aria-pressed="true">Newest first</button>
+      <button type="button" class="sort-btn" data-sort="name" aria-pressed="false">Customer A–Z</button>
+    </div>
+    <span class="count-tag" id="count-tag"></span>
+  </div>
+
+  <div class="leads-list" id="leads-list"></div>
+
+  <div id="loading-state">Loading leads…</div>
+  <div id="empty-state">No leads match yet.</div>
+  <div id="error-state"></div>
+</div>
+
+<script>
+  var SUPABASE_URL = 'https://upblfyhcukuvuxboslzz.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYmxmeWhjdWt1dnV4Ym9zbHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMzc3MzIsImV4cCI6MjEwMzYxMzczMn0.nDPyIq5u3lRGukVN3IcXWgpzJDTMnFX1A4TS_QgTC8Q';
+  var SESSION_KEY = 'rf_admin_session';
+
+  var loginView = document.getElementById('login-view');
+  var dashView = document.getElementById('dash-view');
+  var loginForm = document.getElementById('login-form');
+  var loginStatus = document.getElementById('login-status');
+  var logoutBtn = document.getElementById('logout-btn');
+  var search = document.getElementById('search');
+  var leadsList = document.getElementById('leads-list');
+  var countTag = document.getElementById('count-tag');
+  var loadingState = document.getElementById('loading-state');
+  var emptyState = document.getElementById('empty-state');
+  var errorState = document.getElementById('error-state');
+
+  var allLeads = [];
+  var sortMode = 'time';
+
+  function getSession() {
+    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  function setSession(session) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
+  function clearSession() {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+
+  function showDash() {
+    loginView.style.display = 'none';
+    dashView.style.display = 'block';
+    logoutBtn.style.display = 'inline-flex';
+    loadLeads();
+  }
+
+  function showLogin(message) {
+    clearSession();
+    dashView.style.display = 'none';
+    loginView.style.display = 'flex';
+    logoutBtn.style.display = 'none';
+    if (message) { loginStatus.textContent = message; }
+  }
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    loginStatus.style.color = 'var(--text-dim)';
+    loginStatus.textContent = 'Signing in…';
+
+    fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email: email, password: password })
+    }).then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+      .then(function (result) {
+        if (!result.ok) {
+          loginStatus.style.color = 'var(--bad)';
+          var d = result.data || {};
+          loginStatus.textContent = d.msg || d.error_description || d.error || 'Sign-in failed.';
+          return;
+        }
+        setSession({ access_token: result.data.access_token, email: email });
+        loginForm.reset();
+        loginStatus.textContent = '';
+        showDash();
+      }).catch(function () {
+        loginStatus.style.color = 'var(--bad)';
+        loginStatus.textContent = 'Network error. Please try again.';
+      });
+  });
+
+  logoutBtn.addEventListener('click', function () { showLogin(); });
+
+  function fmtTime(iso) {
+    var d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' +
+      d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  function render() {
+    var q = search.value.trim().toLowerCase();
+    var rows = allLeads.filter(function (lead) {
+      if (!q) return true;
+      return [lead.name, lead.email, lead.phone, lead.brief].some(function (f) {
+        return (f || '').toLowerCase().includes(q);
+      });
+    });
+
+    rows.sort(function (a, b) {
+      if (sortMode === 'name') {
+        return (a.name || a.email || '').localeCompare(b.name || b.email || '');
+      }
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    countTag.textContent = rows.length + (rows.length === 1 ? ' lead' : ' leads');
+    leadsList.innerHTML = '';
+    emptyState.style.display = rows.length ? 'none' : 'block';
+
+    rows.forEach(function (lead) {
+      var row = document.createElement('div');
+      row.className = 'lead-row';
+      row.tabIndex = 0;
+      var brief = lead.brief || '';
+
+      row.innerHTML =
+        '<div class="row-main">' +
+          '<div class="row-name">' + escapeHtml(lead.name || lead.email) + '</div>' +
+          '<div class="row-snippet">' + escapeHtml(brief || 'No project details') + '</div>' +
+        '</div>' +
+        '<div class="row-meta">' +
+          '<span class="row-time">' + fmtTime(lead.created_at) + '</span>' +
+          '<span class="row-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="lead-popover">' +
+          '<div class="popover-grid">' +
+            '<div><span class="k">Email</span>' + escapeHtml(lead.email) + '</div>' +
+            '<div><span class="k">Phone</span>' + escapeHtml(lead.phone || '—') + '</div>' +
+            '<div><span class="k">Preferred</span><span class="pref-badge">' + escapeHtml(lead.preferred_contact || '—') + '</span></div>' +
+          '</div>' +
+          '<div class="popover-brief">' + escapeHtml(brief || 'No project details provided.') + '</div>' +
+          '<div class="popover-actions">' +
+            '<button type="button" class="delete-btn" data-id="' + escapeHtml(lead.id) + '">Delete lead</button>' +
+          '</div>' +
+        '</div>';
+
+      row.addEventListener('click', function () {
+        var alreadyOpen = row.classList.contains('open');
+        document.querySelectorAll('.lead-row.open').forEach(function (r) { r.classList.remove('open'); });
+        if (!alreadyOpen) row.classList.add('open');
+      });
+
+      var deleteBtn = row.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Delete this lead? This can\'t be undone.')) return;
+        deleteLead(lead.id, deleteBtn);
+      });
+
+      leadsList.appendChild(row);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.lead-row')) {
+      document.querySelectorAll('.lead-row.open').forEach(function (r) { r.classList.remove('open'); });
+    }
+  });
+
+  search.addEventListener('input', render);
+
+  document.querySelectorAll('.sort-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.sort-btn').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      sortMode = btn.getAttribute('data-sort');
+      render();
+    });
+  });
+
+  function deleteLead(id, btn) {
+    var session = getSession();
+    if (!session) { showLogin(); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+
+    fetch(SUPABASE_URL + '/rest/v1/leads?id=eq.' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Prefer': 'return=representation'
+      }
+    }).then(function (res) {
+      if (res.status === 401) { showLogin('Session expired. Please sign in again.'); return null; }
+      if (!res.ok) throw new Error('Request failed (' + res.status + ')');
+      return res.json();
+    }).then(function (deletedRows) {
+      if (deletedRows === null) return;
+      if (!deletedRows.length) throw new Error('No permission to delete (check the delete policy in Supabase).');
+      allLeads = allLeads.filter(function (lead) { return lead.id !== id; });
+      render();
+    }).catch(function (err) {
+      btn.disabled = false;
+      btn.textContent = 'Delete lead';
+      alert('Could not delete lead: ' + err.message);
+    });
+  }
+
+  function loadLeads() {
+    var session = getSession();
+    if (!session) { showLogin(); return; }
+
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    emptyState.style.display = 'none';
+
+    fetch(SUPABASE_URL + '/rest/v1/leads?select=*&order=created_at.desc', {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token
+      }
+    }).then(function (res) {
+      if (res.status === 401) { showLogin('Session expired. Please sign in again.'); return null; }
+      if (!res.ok) throw new Error('Request failed (' + res.status + ')');
+      return res.json();
+    }).then(function (data) {
+      if (data === null) return;
+      allLeads = data;
+      loadingState.style.display = 'none';
+      render();
+    }).catch(function (err) {
+      loadingState.style.display = 'none';
+      errorState.style.display = 'block';
+      errorState.textContent = 'Could not load leads: ' + err.message;
+    });
+  }
+
+  var existing = getSession();
+  if (existing) { showDash(); } else { showLogin(); }
+</script>
+</body>
+</html>
