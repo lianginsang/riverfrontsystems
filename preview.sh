@@ -20,7 +20,7 @@ fi
 
 rm -rf .preview
 mkdir .preview
-cp -r ./*.html ./*.png .preview/ 2>/dev/null || true
+cp -r ./*.html ./*.png ./implement .preview/ 2>/dev/null || true
 
 for file in .preview/index.html .preview/admin.html; do
   sed "s|__SUPABASE_URL__|${SUPABASE_URL}|g; s|__SUPABASE_ANON_KEY__|${SUPABASE_ANON_KEY}|g" "$file" > "$file.tmp"
