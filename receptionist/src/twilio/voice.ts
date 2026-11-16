@@ -4,7 +4,7 @@ import { config } from '../config.js';
 import type { Handoff } from '../relay/types.js';
 import { requireTwilioSignature } from './signature.js';
 
-const WELCOME_GREETING = "Hi, thanks for calling Riverfront Systems, this is Maya. How can I help?";
+const WELCOME_GREETING = "Hi, thanks for calling Riverfront Systems, this is April. How can I help?";
 
 export const voiceRouter = Router();
 

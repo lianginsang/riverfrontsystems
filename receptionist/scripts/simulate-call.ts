@@ -88,7 +88,7 @@ ws.on('message', (raw) => {
 
 function say(text: string, interruptAfterTokens?: number): Promise<Reply> {
   console.log(`\nCaller: ${text}`);
-  process.stdout.write('Maya:   ');
+  process.stdout.write('April:  ');
   const sentAt = Date.now();
   return new Promise((resolve) => {
     const reply: Reply = { text: '' };
