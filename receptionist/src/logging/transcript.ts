@@ -33,6 +33,8 @@ export class Transcript {
       console.log(`[${this.callSid}] turn ${entry.turn}: first token in ${entry.firstTokenMs}ms (cache read ${entry.cacheReadTokens ?? 0} tokens)`);
     } else if (entry.kind === 'error') {
       console.error(`[${this.callSid}] error: ${entry.message}`);
+    } else if (entry.kind === 'tool') {
+      console.log(`[${this.callSid}] tool ${entry.name} ${JSON.stringify(entry.input)} -> ${entry.result.replace(/\n/g, ' | ').slice(0, 400)}`);
     }
   }
 

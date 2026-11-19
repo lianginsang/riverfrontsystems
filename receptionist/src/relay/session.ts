@@ -44,6 +44,9 @@ export class CallSession {
     this.transcript = new Transcript(setup.callSid);
     this.transcript.log({ kind: 'call_start', from: setup.from, to: setup.to });
     this.availability = upcomingAvailabilityContext();
+    void this.availability.then((text) =>
+      console.log(`[${this.callSid}] availability for April: ${text.replace(/\n/g, ' | ').slice(0, 400)}`),
+    );
   }
 
   handle(msg: IncomingMessage): void {
