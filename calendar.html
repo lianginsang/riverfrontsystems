@@ -10,17 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <style>
   :root {
     --bg: #0B0F14;
-    --surface: #10161D;
-    --surface-2: #141B23;
-    --border: #232B35;
-    --border-soft: #1A2129;
+    --surface: #121A23;
+    --surface-2: #1A2430;
+    --border: #34414F;
+    --border-soft: #26313D;
     --text: #E8ECF1;
-    --text-muted: #8A97A6;
-    --text-dim: #5C6673;
+    --text-muted: #B8C2CE;
+    --text-dim: #8C97A5;
     --accent: #E8A33D;
     --good: #4FAE8E;
     --bad: #D9695A;
@@ -78,6 +77,11 @@
 
   .brand .tag { color: var(--text-dim); font-weight: 500; }
 
+  @media (max-width: 480px) {
+    .brand { font-size: 13px; }
+    .brand .tag { display: none; }
+  }
+
   .header-actions { display: flex; align-items: center; gap: 10px; }
 
   .btn-quiet {
@@ -90,6 +94,7 @@
     padding: 7px 12px;
     cursor: pointer;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .btn-quiet:hover { border-color: var(--text-dim); color: var(--text); }
@@ -217,57 +222,125 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  .cal-options {
+  /* ---------- month view: day list left, month right (stacked on phones) ---------- */
+
+  .cal-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 620px);
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .cal-layout { grid-template-columns: 1fr; gap: 18px; }
+    .month-pane { order: -1; } /* calendar on top, the day's list below, like a phone calendar */
+  }
+
+  .month-pane, .day-pane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .month-head, .day-head {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-muted);
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
-  /* ---------- FullCalendar, themed ---------- */
+  .month-title, .day-title { font-family: var(--mono); font-size: 17px; font-weight: 600; color: var(--text); }
+  .day-sub { font-family: var(--mono); font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  #calendar {
-    --fc-border-color: var(--border-soft);
-    --fc-page-bg-color: var(--bg);
-    --fc-neutral-bg-color: var(--surface);
-    --fc-neutral-text-color: var(--text-dim);
-    --fc-today-bg-color: color-mix(in srgb, var(--accent) 6%, transparent);
-    --fc-now-indicator-color: var(--accent);
-    --fc-event-bg-color: color-mix(in srgb, var(--accent) 22%, var(--surface));
-    --fc-event-border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-    --fc-event-text-color: var(--text);
-    --fc-button-bg-color: var(--surface);
-    --fc-button-border-color: var(--border);
-    --fc-button-text-color: var(--text-muted);
-    --fc-button-hover-bg-color: var(--surface-2);
-    --fc-button-hover-border-color: var(--text-dim);
-    --fc-button-active-bg-color: var(--accent);
-    --fc-button-active-border-color: var(--accent);
-    --fc-non-business-color: rgba(0, 0, 0, 0.28);
-    --fc-highlight-color: color-mix(in srgb, var(--accent) 14%, transparent);
-    font-size: 13px;
-  }
+  .month-nav { display: flex; gap: 6px; }
+  .month-nav button { min-width: 36px; }
 
-  #calendar .fc-toolbar-title { font-family: var(--mono); font-size: 16px; font-weight: 600; }
-  #calendar .fc-button { font-family: var(--mono); font-size: 12px; text-transform: none; box-shadow: none; }
-  #calendar .fc-button-active { color: #14100A; }
-  #calendar .fc-col-header-cell-cushion, #calendar .fc-daygrid-day-number, #calendar .fc-timegrid-slot-label-cushion {
-    color: var(--text-muted);
-    text-decoration: none;
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+
+  .weekday {
+    text-align: center;
     font-family: var(--mono);
     font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding-bottom: 6px;
   }
-  #calendar .fc-event { cursor: pointer; border-radius: 5px; }
-  #calendar .fc-event.is-cancelled { opacity: 0.4; text-decoration: line-through; }
-  #calendar .fc-event.is-ai { --fc-event-bg-color: color-mix(in srgb, var(--good) 22%, var(--surface)); }
-  #calendar .blocked-bg { background: repeating-linear-gradient(135deg, rgba(217,105,90,0.16) 0 6px, transparent 6px 12px); opacity: 1; }
 
-  @media (max-width: 640px) {
-    #calendar .fc-toolbar { flex-direction: column; gap: 8px; }
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
   }
+
+  .day:hover { border-color: var(--text-dim); }
+  .day.outside { color: var(--text-dim); background: transparent; font-weight: 500; }
+  .day.today { border-color: var(--accent); color: var(--accent); }
+  .day.selected { background: var(--accent); border-color: var(--accent); color: #14100A; }
+  .day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .dot.empty { background: transparent; }
+  .day.selected .dot { background: #14100A; }
+
+  @media (max-width: 480px) {
+    .month-pane { padding: 12px; }
+    .month-grid { gap: 3px; }
+    .day { font-size: 13.5px; border-radius: 8px; gap: 3px; }
+  }
+
+  .day-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .booking-item {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .booking-item:hover { border-color: var(--text-dim); border-left-color: var(--accent); }
+  .booking-item.ai { border-left-color: var(--good); }
+  .booking-item.cancelled { opacity: 0.5; }
+  .booking-item.cancelled .bi-name { text-decoration: line-through; }
+
+  .bi-time { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
+  .bi-end { display: block; font-weight: 500; color: var(--text-muted); font-size: 12px; }
+  .bi-name { font-weight: 600; font-size: 14.5px; }
+  .bi-detail { font-size: 13px; color: var(--text-muted); }
+
+  .blocked-item {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--bad);
+    border: 1px dashed color-mix(in srgb, var(--bad) 55%, var(--border));
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  .day-foot { margin-top: 14px; }
 
   .ai-badge {
     display: inline-block;
@@ -282,9 +355,6 @@
     margin-right: 5px;
     vertical-align: 1px;
   }
-
-  .ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ev-time { color: var(--text-muted); font-size: 11px; }
 
   /* ---------- settings tables ---------- */
 
@@ -433,10 +503,33 @@
   </div>
 
   <section class="panel active" id="calendar-panel">
-    <div class="cal-options">
-      <label class="check"><input type="checkbox" id="show-cancelled"> Show cancelled</label>
+    <div class="cal-layout">
+      <aside class="day-pane" aria-live="polite">
+        <div class="day-head">
+          <div>
+            <div class="day-title" id="day-title"></div>
+            <div class="day-sub" id="day-sub"></div>
+          </div>
+          <button type="button" class="btn-primary" id="new-booking">+ New</button>
+        </div>
+        <div id="day-blocked"></div>
+        <div class="day-list" id="day-list"></div>
+        <div class="day-foot">
+          <label class="check"><input type="checkbox" id="show-cancelled"> Show cancelled</label>
+        </div>
+      </aside>
+      <div class="month-pane">
+        <div class="month-head">
+          <div class="month-title" id="month-title"></div>
+          <div class="month-nav">
+            <button type="button" class="btn-quiet" id="prev-month" aria-label="Previous month">&lsaquo;</button>
+            <button type="button" class="btn-quiet" id="today-btn">Today</button>
+            <button type="button" class="btn-quiet" id="next-month" aria-label="Next month">&rsaquo;</button>
+          </div>
+        </div>
+        <div class="month-grid" id="month-grid"></div>
+      </div>
     </div>
-    <div id="calendar"></div>
   </section>
 
   <section class="panel" id="services-panel">
@@ -518,7 +611,6 @@
 
   var services = [];
   var hours = [];
-  var calendar = null;
   var liveChannel = null;
   var dashShown = false;
   var entering = null; // in-flight enter(), so a page load and a sign-in can't both run it
@@ -676,110 +768,146 @@
     tab.addEventListener('click', function () {
       document.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-selected', String(t === tab)); });
       document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('active', p.id === tab.dataset.panel); });
-      if (tab.dataset.panel === 'calendar-panel' && calendar) calendar.updateSize();
     });
   });
 
-  // ---------- calendar ----------
+  // ---------- month view ----------
 
-  function businessHours() {
-    return hours.map(function (row) {
-      return { daysOfWeek: [row.weekday], startTime: row.open_time.slice(0, 5), endTime: row.close_time.slice(0, 5) };
-    });
-  }
+  var view = null;          // first day of the month on screen
+  var selected = null;      // the day whose bookings are listed
+  var monthBookings = [];
+  var monthBlocked = [];
 
-  async function loadBookingEvents(info, success, failure) {
-    var query = db.from('bookings')
-      .select('id, service_id, starts_at, ends_at, customer_name, customer_phone, status, source, call_sid, notes')
-      .lt('starts_at', info.endStr)
-      .gt('ends_at', info.startStr);
-    if (!$('show-cancelled').checked) query = query.eq('status', 'booked');
-    var result = await query;
-    if (result.error) { toast(explain(result.error), true); failure(result.error); return; }
-    success(result.data.map(function (row) {
-      var classes = [];
-      if (row.status === 'cancelled') classes.push('is-cancelled');
-      if (row.source === 'ai') classes.push('is-ai');
-      return {
-        id: row.id,
-        title: row.customer_name + ' · ' + serviceName(row.service_id),
-        start: row.starts_at,
-        end: row.ends_at,
-        editable: row.status === 'booked',
-        classNames: classes,
-        extendedProps: { kind: 'booking', row: row },
-      };
-    }));
-  }
+  function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+  function fmtClock(iso) { return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
 
-  async function loadBlockedEvents(info, success, failure) {
-    var result = await db.from('blocked_times').select('id, starts_at, ends_at, reason').lt('starts_at', info.endStr).gt('ends_at', info.startStr);
-    if (result.error) { failure(result.error); return; }
-    success(result.data.map(function (row) {
-      return { id: 'blocked-' + row.id, start: row.starts_at, end: row.ends_at, display: 'background', classNames: ['blocked-bg'], title: row.reason || 'Blocked' };
-    }));
+  // Six weeks starting on the Sunday on or before the 1st.
+  function gridStart() { return addDays(view, -view.getDay()); }
+
+  function bookingsOn(day) {
+    var next = addDays(day, 1);
+    return monthBookings
+      .filter(function (b) { return new Date(b.starts_at) < next && new Date(b.ends_at) > day; })
+      .sort(function (a, b) { return a.starts_at.localeCompare(b.starts_at); });
   }
 
   function initCalendar() {
-    if (calendar) { calendar.refetchEvents(); return; }
-    var narrow = window.matchMedia('(max-width: 640px)').matches;
-    calendar = new FullCalendar.Calendar($('calendar'), {
-      initialView: narrow ? 'timeGridDay' : 'timeGridWeek',
-      headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' },
-      buttonText: { today: 'Today', day: 'Day', week: 'Week', month: 'Month' },
-      height: 'auto',
-      allDaySlot: false,
-      slotMinTime: '07:00:00',
-      slotMaxTime: '20:00:00',
-      nowIndicator: true,
-      selectable: true,
-      selectMirror: true,
-      editable: true,
-      businessHours: businessHours(),
-      eventSources: [
-        // Not returning the promise: FullCalendar would treat its (empty) result as the events.
-        { id: 'bookings', events: function (info, success, failure) { loadBookingEvents(info, success, failure); } },
-        { id: 'blocked', events: function (info, success, failure) { loadBlockedEvents(info, success, failure); } },
-      ],
-      select: function (info) {
-        calendar.unselect();
-        var start = new Date(info.start);
-        if (info.allDay) start.setHours(9, 0, 0, 0); // month view: default to 9 AM
-        openBooking(null, start);
-      },
-      eventClick: function (info) {
-        if (info.event.extendedProps.kind === 'booking') openBooking(info.event.extendedProps.row);
-      },
-      eventDrop: moveBooking,
-      eventResize: moveBooking,
-      eventContent: function (arg) {
-        if (arg.event.display === 'background') return true;
-        var row = arg.event.extendedProps.row;
-        var title = h('div', { class: 'ev-title' }, row && row.source === 'ai' ? h('span', { class: 'ai-badge', title: 'Booked by April' }, 'AI') : null, arg.event.title);
-        return { domNodes: [h('div', { class: 'ev-time' }, arg.timeText), title] };
-      },
-    });
-    calendar.render();
+    var today = startOfDay(new Date());
+    if (!view) { view = new Date(today.getFullYear(), today.getMonth(), 1); selected = today; }
+    refresh();
   }
 
-  // Drag or resize: write the new times; the database rejects overlaps.
-  async function moveBooking(info) {
-    var row = info.event.extendedProps.row;
-    var result = await db.from('bookings')
-      .update({ starts_at: info.event.start.toISOString(), ends_at: info.event.end.toISOString() })
-      .eq('id', row.id)
-      .select('id');
-    if (result.error || !result.data.length) {
-      info.revert();
-      toast(result.error ? explain(result.error) : 'That booking changed. Refreshing.', true);
-      calendar.getEventSourceById('bookings').refetch();
-      return;
+  // Loads the six visible weeks of bookings and blocked times, then redraws both panes.
+  async function refresh() {
+    if (!view) return;
+    var from = gridStart(), to = addDays(from, 42);
+    var query = db.from('bookings')
+      .select('id, service_id, starts_at, ends_at, customer_name, customer_phone, status, source, call_sid, notes')
+      .lt('starts_at', to.toISOString())
+      .gt('ends_at', from.toISOString());
+    if (!$('show-cancelled').checked) query = query.eq('status', 'booked');
+    var results = await Promise.all([
+      query,
+      db.from('blocked_times').select('id, starts_at, ends_at, reason').lt('starts_at', to.toISOString()).gt('ends_at', from.toISOString()),
+    ]);
+    if (results[0].error || results[1].error) { toast(explain(results[0].error || results[1].error), true); return; }
+    monthBookings = results[0].data;
+    monthBlocked = results[1].data;
+    renderMonth();
+    renderDay();
+  }
+
+  function renderMonth() {
+    $('month-title').textContent = view.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    var grid = $('month-grid');
+    grid.replaceChildren();
+    ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(function (d) { grid.append(h('div', { class: 'weekday', 'aria-hidden': 'true' }, d)); });
+    var today = startOfDay(new Date());
+    var start = gridStart();
+    for (var i = 0; i < 42; i++) {
+      (function (day) {
+        var booked = bookingsOn(day).some(function (b) { return b.status === 'booked'; });
+        var classes = ['day'];
+        if (day.getMonth() !== view.getMonth()) classes.push('outside');
+        if (sameDay(day, today)) classes.push('today');
+        if (sameDay(day, selected)) classes.push('selected');
+        var label = day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + (booked ? ', has bookings' : '');
+        grid.append(h('button', {
+          type: 'button',
+          class: classes.join(' '),
+          'aria-label': label,
+          'aria-pressed': String(sameDay(day, selected)),
+          onclick: function () {
+            selected = day;
+            if (day.getMonth() !== view.getMonth()) { view = new Date(day.getFullYear(), day.getMonth(), 1); refresh(); return; }
+            renderMonth();
+            renderDay();
+          },
+        }, String(day.getDate()), h('span', { class: 'dot' + (booked ? '' : ' empty') })));
+      })(addDays(start, i));
     }
-    toast('Moved ' + row.customer_name + ' to ' + fmtWhen(info.event.start.toISOString()));
   }
 
-  $('show-cancelled').addEventListener('change', function () {
-    if (calendar) calendar.getEventSourceById('bookings').refetch();
+  function openingHours(day) {
+    var rows = hours.filter(function (r) { return r.weekday === day.getDay(); });
+    if (!rows.length) return 'Closed';
+    return 'Open ' + rows.map(function (r) {
+      var t = function (hhmm) { var p = hhmm.split(':'); return new Date(2000, 0, 1, +p[0], +p[1]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
+      return t(r.open_time) + '\u2013' + t(r.close_time);
+    }).join(', ');
+  }
+
+  function renderDay() {
+    var list = bookingsOn(selected);
+    var active = list.filter(function (b) { return b.status === 'booked'; }).length;
+    $('day-title').textContent = selected.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    $('day-sub').textContent = openingHours(selected) + ' \u00b7 ' + (active === 1 ? '1 booking' : active + ' bookings');
+
+    var next = addDays(selected, 1);
+    $('day-blocked').replaceChildren.apply($('day-blocked'), monthBlocked
+      .filter(function (b) { return new Date(b.starts_at) < next && new Date(b.ends_at) > selected; })
+      .map(function (b) { return h('div', { class: 'blocked-item' }, 'Blocked ' + fmtClock(b.starts_at) + '\u2013' + fmtClock(b.ends_at) + (b.reason ? ' \u00b7 ' + b.reason : '')); }));
+
+    var box = $('day-list');
+    box.replaceChildren();
+    if (!list.length) { box.append(h('div', { class: 'empty' }, 'No bookings.')); return; }
+    list.forEach(function (row) {
+      box.append(h('button', {
+        type: 'button',
+        class: 'booking-item' + (row.source === 'ai' ? ' ai' : '') + (row.status === 'cancelled' ? ' cancelled' : ''),
+        onclick: function () { openBooking(row); },
+      },
+        h('span', { class: 'bi-time' }, fmtClock(row.starts_at), h('span', { class: 'bi-end' }, fmtClock(row.ends_at))),
+        h('span', {},
+          h('div', { class: 'bi-name' }, row.source === 'ai' ? h('span', { class: 'ai-badge', title: 'Booked by April' }, 'AI') : null, row.customer_name),
+          h('div', { class: 'bi-detail' }, serviceName(row.service_id) + ' \u00b7 ' + displayPhone(row.customer_phone) + (row.status === 'cancelled' ? ' \u00b7 Cancelled' : ''))
+        )
+      ));
+    });
+  }
+
+  $('prev-month').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); refresh(); });
+  $('next-month').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); refresh(); });
+  $('today-btn').addEventListener('click', function () {
+    selected = startOfDay(new Date());
+    view = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    refresh();
+  });
+  $('show-cancelled').addEventListener('change', refresh);
+
+  // New booking on the selected day: at opening time, or the next half hour if that's passed.
+  $('new-booking').addEventListener('click', function () {
+    var row = hours.filter(function (r) { return r.weekday === selected.getDay(); }).sort(function (a, b) { return a.open_time.localeCompare(b.open_time); })[0];
+    var parts = (row ? row.open_time : '09:00').split(':');
+    var start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), +parts[0], +parts[1]);
+    var now = new Date();
+    if (start < now && sameDay(selected, now)) {
+      start = new Date(now.getTime() + 30 * 60000);
+      start.setMinutes(start.getMinutes() < 30 ? 30 : 60, 0, 0);
+    }
+    openBooking(null, start);
   });
 
   // Realtime: bookings April makes (or other staff change) appear without a refresh.
@@ -787,7 +915,7 @@
     if (liveChannel) return;
     liveChannel = db.channel('bookings-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, function (payload) {
-        if (calendar) calendar.getEventSourceById('bookings').refetch();
+        refresh();
         var row = payload.new;
         if (payload.eventType === 'INSERT' && row && row.source === 'ai') {
           toast('April booked ' + row.customer_name + ' for ' + fmtWhen(row.starts_at));
@@ -878,7 +1006,7 @@
     if (result.error) { status.textContent = explain(result.error); return; }
     $('booking-dialog').close();
     toast((editing ? 'Updated ' : 'Booked ') + name + ' for ' + fmtWhen(fields.starts_at));
-    calendar.getEventSourceById('bookings').refetch();
+    refresh();
   });
 
   $('b-cancel').addEventListener('click', async function () {
@@ -890,7 +1018,7 @@
     if (result.error) { $('dialog-status').textContent = explain(result.error); return; }
     $('booking-dialog').close();
     toast('Cancelled ' + editing.customer_name + '’s booking');
-    calendar.getEventSourceById('bookings').refetch();
+    refresh();
   });
 
   $('b-transcript').addEventListener('click', async function () {
@@ -931,7 +1059,7 @@
     renderServices();
     renderHours();
     renderBlocked();
-    if (calendar) calendar.setOption('businessHours', businessHours());
+    if (view) refresh();
   }
 
   async function save(promise, message, after) {
@@ -955,7 +1083,7 @@
         h('label', { class: 'check' }, active, 'Active'),
         h('button', { type: 'button', class: 'btn-quiet', onclick: function () {
           save(db.from('services').update({ name: name.value.trim(), duration_minutes: Number(minutes.value), active: active.checked }).eq('id', s.id),
-            'Saved ' + name.value.trim(), function () { if (calendar) calendar.refetchEvents(); });
+            'Saved ' + name.value.trim());
         } }, 'Save'),
         h('button', { type: 'button', class: 'btn-danger', onclick: function () {
           save(db.from('services').delete().eq('id', s.id), 'Deleted ' + s.name);
@@ -1029,7 +1157,7 @@
         h('span', { class: 'row-text' }, fmtWhen(row.ends_at)),
         h('span', { class: 'row-text' }, row.reason || 'Blocked'),
         h('button', { type: 'button', class: 'btn-danger', onclick: function () {
-          save(db.from('blocked_times').delete().eq('id', row.id), 'Removed block', function () { if (calendar) calendar.getEventSourceById('blocked').refetch(); });
+          save(db.from('blocked_times').delete().eq('id', row.id), 'Removed block');
         } }, 'Delete')
       ));
     });
@@ -1047,7 +1175,7 @@
         var from = fromLocalInput(start.value), to = fromLocalInput(end.value);
         if (!from || !to || to <= from) { toast('The end has to be after the start.', true); return; }
         save(db.from('blocked_times').insert({ starts_at: from.toISOString(), ends_at: to.toISOString(), reason: reason.value.trim() || null }),
-          'Blocked ' + fmtWhen(from.toISOString()), function () { if (calendar) calendar.getEventSourceById('blocked').refetch(); });
+          'Blocked ' + fmtWhen(from.toISOString()));
       } }, 'Add')
     ));
   }

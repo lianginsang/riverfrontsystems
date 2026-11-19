@@ -84,7 +84,7 @@ April books, reschedules and cancels appointments in Supabase, the same tables t
 
 `calendar.html` at the site root (linked from `admin.html`) is the staff view of the same bookings table.
 
-- Day, week and month views. Click or drag across empty time to book, drag a booking to move it, drag its bottom edge to change its length, click it to edit or cancel. The database's no-overlap constraint protects these edits too: an overlapping move snaps back with a message.
+- A month calendar with a dot on each day that has bookings, next to a list of the selected day's bookings (stacked, calendar on top, on phones). **+ New** books on the selected day; click a booking to edit, move or cancel it. The database's no-overlap constraint protects these edits too: an overlapping change is refused with a message.
 - Bookings April made carry an **AI** badge. Their **View call transcript** button loads the call log from this server (`GET /api/transcripts/:callSid`), which checks the staff member's Supabase sign-in before returning anything. Transcripts live on Render's disk, so they disappear when the receptionist redeploys.
 - New and changed bookings appear live via Supabase Realtime (the "Live" dot top right).
 - The Services, Weekly hours and Blocked times tabs edit the tables April books from.
