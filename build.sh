@@ -9,9 +9,9 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
   exit 1
 fi
 
-for file in index.html admin.html; do
+for file in index.html admin.html calendar.html; do
   sed "s|__SUPABASE_URL__|${SUPABASE_URL}|g; s|__SUPABASE_ANON_KEY__|${SUPABASE_ANON_KEY}|g" "$file" > "$file.tmp"
   mv "$file.tmp" "$file"
 done
 
-echo "Injected Supabase config into index.html and admin.html."
+echo "Injected Supabase config into index.html, admin.html and calendar.html."
