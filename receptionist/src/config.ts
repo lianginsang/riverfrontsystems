@@ -33,6 +33,11 @@ export const config = {
   supabaseUrl: process.env.SUPABASE_URL?.trim() || undefined,
   // Server-side only. Bypasses row-level security; never send it to a browser.
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined,
+  // Sites allowed to fetch call transcripts from this server (the staff calendar).
+  calendarOrigins: (process.env.CALENDAR_ORIGINS ?? 'https://riverfrontsystems.com,https://www.riverfrontsystems.com,http://localhost:8000')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
   businessName: process.env.BUSINESS_NAME?.trim() || 'Riverfront Systems',
   // Used when no weekly hours exist yet; otherwise each hours row carries its own.
   businessTimezone: 'America/New_York',

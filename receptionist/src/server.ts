@@ -4,6 +4,7 @@ import { WebSocketServer } from 'ws';
 import { config } from './config.js';
 import { CallSession, sessions } from './relay/session.js';
 import type { IncomingMessage } from './relay/types.js';
+import { transcriptsRouter } from './http/transcripts.js';
 import { isValidWebSocketUpgrade } from './twilio/signature.js';
 import { voiceRouter } from './twilio/voice.js';
 
@@ -13,6 +14,7 @@ app.get('/', (_req, res) => {
   res.send('ok');
 });
 app.use(voiceRouter);
+app.use(transcriptsRouter);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });

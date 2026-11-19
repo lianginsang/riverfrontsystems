@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '../config.js';
 
-const logsDir = path.join(config.rootDir, 'logs');
+export const logsDir = path.join(config.rootDir, 'logs');
 
 export type TranscriptEntry =
   | { kind: 'call_start'; from: string; to: string }

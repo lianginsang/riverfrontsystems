@@ -175,16 +175,20 @@ export class MemoryRepo implements BookingRepo {
   }
 }
 
+// Service-role client: bypasses row-level security. Server-side only. Also used to
+// check staff sign-ins for the calendar's transcript requests.
+export const supabaseAdmin: SupabaseClient | undefined =
+  config.supabaseUrl && config.supabaseServiceRoleKey
+    ? createClient(config.supabaseUrl, config.supabaseServiceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
+    : undefined;
+
 function createRepo(): BookingRepo | undefined {
   if (config.bookingsBackend === 'memory') return new MemoryRepo();
-  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
+  if (!supabaseAdmin) {
     console.warn('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set: booking tools are disabled.');
     return undefined;
   }
-  const db = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  return new SupabaseRepo(db);
+  return new SupabaseRepo(supabaseAdmin);
 }
 
 // undefined when bookings aren't configured; the booking service reports that to April.
