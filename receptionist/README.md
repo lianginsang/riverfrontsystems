@@ -69,6 +69,19 @@ The same number is in the call's `logs/*.jsonl` as `{"kind":"latency",...}`. `ca
 
 Latency choices made in the code: thinking is turned off and effort is `low` (`src/llm/claude.ts`), retries are capped at one with a 15s timeout, and the per-call caller ID and time go in the first user message rather than the system prompt, so the cached system prompt is identical across calls.
 
+## Turn-taking and interruptions
+
+Set in `src/twilio/voice.ts`:
+
+- **Speech-to-text is Deepgram Flux** (`speechModel="flux"`). Flux has its own end-of-turn model, so April replies when the caller is done talking instead of after a fixed silence.
+- **`EOT_THRESHOLD`** (default `0.7`, range 0.5-0.9) is how sure Flux must be that the caller finished. If April cuts people off mid-sentence (especially while they read out a number), raise it. If she feels slow to answer, lower it.
+- **`INTERRUPT_SENSITIVITY`** (default `medium`): if noise or speakerphone echo stops April mid-sentence, set `low`. If callers have to talk over her for a while before she stops, set `high`.
+- **`ignoreBackchannel`** is on, so "yeah", "uh-huh" and "okay" while April talks don't stop her.
+
+Both variables can be changed in `.env` (or the Render dashboard) without touching code.
+
+The TwiML also subscribes to `speaker-events` and `tokens-played`. Every such message is written to the call's `logs/*.jsonl` as `{"kind":"relay_event",...}` with `msSincePrompt`: milliseconds since the caller's final transcript arrived. The first playback event after a prompt shows how long the caller actually waited to hear April, which is a truer number than time to first token.
+
 ## How calls end
 
 - **Transfer:** Claude calls `transfer_to_human`. The server waits for "let me connect you" to finish playing, sends ConversationRelay `end` with `{"action":"transfer"}`, and `/connect-action` returns `<Dial>` to `OWNER_CELL_NUMBER`. The caller ID you see is the original caller.

@@ -26,6 +26,10 @@ export const config = {
   ownerCellNumber: required('OWNER_CELL_NUMBER'),
   elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID?.trim() || undefined,
 
+  // Turn-taking tuning (see src/twilio/voice.ts). Override in .env without a code change.
+  eotThreshold: process.env.EOT_THRESHOLD?.trim() || '0.7',
+  interruptSensitivity: process.env.INTERRUPT_SENSITIVITY?.trim() || 'medium',
+
   publicBaseUrl,
   // The exact URL placed in the TwiML; Twilio signs the WebSocket handshake against it.
   wsUrl: publicBaseUrl.replace(/^http/, 'ws') + '/ws',

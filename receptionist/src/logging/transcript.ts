@@ -11,6 +11,7 @@ export type TranscriptEntry =
   | { kind: 'interrupted'; spoken: string }
   | { kind: 'tool'; name: string; input: unknown; result: string }
   | { kind: 'latency'; turn: number; firstTokenMs: number; cacheReadTokens?: number }
+  | { kind: 'relay_event'; type: string; msSincePrompt?: number; data: unknown }
   | { kind: 'error'; message: string }
   | { kind: 'call_end'; reason: string };
 

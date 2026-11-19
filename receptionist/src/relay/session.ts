@@ -24,6 +24,8 @@ export class CallSession {
   private turnCount = 0;
   private current?: ReplyStream;
   private consecutiveFailures = 0;
+  // When the latest final caller prompt arrived; relay events are timed against it.
+  private lastPromptAt?: number;
   private outcome = 'caller hung up';
   private ending = false;
   private finished = false;
@@ -39,6 +41,7 @@ export class CallSession {
     switch (msg.type) {
       case 'prompt':
         if (msg.last === false) return; // partial prompt; wait for the final one
+        this.lastPromptAt = Date.now();
         this.onPrompt(msg.voicePrompt);
         break;
       case 'interrupt':
@@ -51,6 +54,16 @@ export class CallSession {
       case 'error':
         this.transcript.log({ kind: 'error', message: `ConversationRelay: ${msg.description}` });
         break;
+      default:
+        // info, speaker events, tokens-played, and anything new. msSincePrompt on the
+        // first playback event after a prompt is the delay the caller actually hears
+        // (minus Flux's end-of-turn wait, which happens before the prompt arrives).
+        this.transcript.log({
+          kind: 'relay_event',
+          type: (msg as { type: string }).type,
+          msSincePrompt: this.lastPromptAt === undefined ? undefined : Date.now() - this.lastPromptAt,
+          data: msg,
+        });
     }
   }
 
