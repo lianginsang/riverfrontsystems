@@ -20,10 +20,11 @@ Caller ── Twilio number ── POST /voice ──> TwiML <Connect><Conversat
 | `src/twilio/voice.ts` | `/voice` webhook (TwiML, welcome greeting) and `/connect-action` (transfer or hang up) |
 | `src/relay/session.ts` | One call: history, streaming, interruptions, tool calls, error recovery |
 | `src/llm/claude.ts` | Claude streaming request, prompt caching, mock mode |
-| `src/llm/tools.ts` | `save_lead`, `transfer_to_human`, `end_call` |
+| `src/llm/tools.ts` | Tool definitions and input validation: leads, bookings, transfer, hang up |
+| `src/bookings/` | Booking module: open-slot math (`slots.ts`, `time.ts`), Supabase + in-memory storage (`repo.ts`), the operations April's tools call (`service.ts`) |
 | `src/leads/store.ts` | `LeadStore` interface + JSON file implementation (`data/leads.json`) |
 | `src/calls/summary.ts` | End-of-call summary SMS |
-| `scripts/simulate-call.ts` | Fake ConversationRelay call for testing, no phone needed |
+| `scripts/simulate-call.ts` | Fake ConversationRelay calls for testing, including booking checks, no phone needed |
 | `logs/` | One `<date>_<CallSid>.jsonl` transcript per call, including per-turn latency |
 
 ## Run locally
@@ -50,12 +51,34 @@ Point your Twilio number at `https://<your-ngrok>.ngrok-free.app/voice` (see **T
 ## Test without a phone call
 
 ```bash
-npm run simulate -- --mock   # fake LLM, needs no keys at all
-npm run simulate             # real Claude, needs ANTHROPIC_API_KEY in .env
-npm run simulate -- --sms    # also really texts the summary to OWNER_CELL_NUMBER
+npm run simulate -- --mock              # fake LLM, needs no keys; runs the booking checks
+npm run simulate                        # real Claude, needs ANTHROPIC_API_KEY in .env
+npm run simulate -- --mock --supabase   # booking checks against your real Supabase tables
+npm run simulate -- --sms               # also really sends texts
 ```
 
 The simulator starts the server, fetches the `/voice` TwiML, plays a scripted caller over the WebSocket (including one interruption and a request for a person), then calls `/connect-action`. It prints each reply as it streams, with time to first token.
+
+With `--mock` it then runs booking checks and exits non-zero if any fail: booking a slot, a second caller asking for that taken slot, a time outside opening hours, one caller trying to cancel another's booking, rescheduling, cancelling, and two callers booking the same slot at the same moment. Bookings use an in-memory copy of the tables unless you add `--supabase`, which writes real rows (call SIDs starting `CAsim`) and deletes them at the end.
+
+## Appointment booking
+
+April books, reschedules and cancels appointments in Supabase, the same tables the staff calendar uses. The tables are defined in `supabase/schema.sql` under "Migration 2".
+
+**Setup**
+
+1. Supabase dashboard → **SQL Editor** → **New query**: paste the Migration 2 section of `supabase/schema.sql` and run it. It creates the tables, row-level security and the Realtime publication for `bookings`, so there's no separate Realtime toggle to flip.
+2. Make yourself staff, and add at least one service and your weekly hours (the snippets are at the bottom of Migration 2).
+3. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API → `service_role`) in `.env` and on Render. The service role key bypasses row-level security, so it only ever lives on the server.
+
+**How it works**
+
+- When a call connects, the server loads the next three days of open start times and adds them to April's first message (with caller ID and the current time). She answers "anything Thursday afternoon?" from that without a tool call. The system prompt stays byte-identical so it keeps hitting the prompt cache.
+- Open times are calculated in `src/bookings/slots.ts`, never by the model: weekly hours, blocked times, existing bookings, service length, the business time zone, and a 30-minute minimum notice.
+- Double-booking is prevented by the database itself: the `bookings_no_overlap` exclusion constraint rejects a booking that overlaps another `booked` one. When that happens (someone took the slot a moment earlier), the tool tells April "That time was just taken" with fresh options.
+- Callers can only find, move or cancel bookings whose phone number matches their caller ID.
+- After a booking, reschedule or cancellation, the caller gets a confirmation text (skipped when `DISABLE_SMS=1`).
+- Without the Supabase variables the server still runs; the booking tools tell April to take a message instead.
 
 ## Latency and caching
 

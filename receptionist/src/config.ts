@@ -26,6 +26,17 @@ export const config = {
   ownerCellNumber: required('OWNER_CELL_NUMBER'),
   elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID?.trim() || undefined,
 
+  // Bookings. 'memory' is an in-process store used by the simulator; anything else
+  // means Supabase. Without Supabase credentials the booking tools tell April that
+  // booking is unavailable instead of crashing the server.
+  bookingsBackend: process.env.BOOKINGS_BACKEND === 'memory' ? ('memory' as const) : ('supabase' as const),
+  supabaseUrl: process.env.SUPABASE_URL?.trim() || undefined,
+  // Server-side only. Bypasses row-level security; never send it to a browser.
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined,
+  businessName: process.env.BUSINESS_NAME?.trim() || 'Riverfront Systems',
+  // Used when no weekly hours exist yet; otherwise each hours row carries its own.
+  businessTimezone: 'America/New_York',
+
   // Turn-taking tuning (see src/twilio/voice.ts). Override in .env without a code change.
   eotThreshold: process.env.EOT_THRESHOLD?.trim() || '0.7',
   interruptSensitivity: process.env.INTERRUPT_SENSITIVITY?.trim() || 'medium',

@@ -70,30 +70,43 @@ export async function summarizeCall(transcript: string): Promise<string> {
 }
 
 // Deterministic stand-in for Claude, used by `npm run simulate -- --mock`.
+// A caller line containing [[tool_name {"json": "input"}]] makes it call that tool;
+// after any tool it speaks the tool result verbatim, so the simulator can check it.
 function mockReply(messages: Anthropic.MessageParam[], onText: (delta: string) => void): ReplyStream {
   let aborted = false;
   const last = messages[messages.length - 1];
-  const lastText = typeof last.content === 'string' ? last.content : '';
-  const afterTool = Array.isArray(last.content) && last.content.some((b) => b.type === 'tool_result');
+  const lastText = (typeof last.content === 'string' ? last.content : '').replace(/^\[Call info:[\s\S]*?\]\n/, '');
+  const toolResult = Array.isArray(last.content)
+    ? (last.content.find((b) => b.type === 'tool_result') as Anthropic.ToolResultBlockParam | undefined)
+    : undefined;
+  const directive = /\[\[(\w+)\s*(\{[\s\S]*?\})?\]\]/.exec(lastText);
   const wantsPerson = /person|human|someone/i.test(lastText);
   const wantsBye = /bye|that's all|thats all/i.test(lastText);
 
-  const text = afterTool
-    ? 'Done.'
-    : wantsPerson
-      ? 'Sure, let me connect you.'
-      : wantsBye
-        ? 'Thanks for calling, have a great day!'
-        : `Gotcha, you said ${lastText.replace(/^\[.*?\]\s*/s, '').slice(0, 60)}. How can I help with that?`;
-  const toolUse: Anthropic.ToolUseBlock | null =
-    afterTool ? null
-    : wantsPerson ? { type: 'tool_use', id: `toolu_mock_${Date.now()}`, name: 'transfer_to_human', input: { reason: 'Caller asked for a person' }, caller: { type: 'direct' } } as unknown as Anthropic.ToolUseBlock
-    : wantsBye ? { type: 'tool_use', id: `toolu_mock_${Date.now()}`, name: 'end_call', input: {}, caller: { type: 'direct' } } as unknown as Anthropic.ToolUseBlock
-    : null;
+  const mockToolUse = (name: string, input: unknown) =>
+    ({ type: 'tool_use', id: `toolu_mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, name, input, caller: { type: 'direct' } }) as unknown as Anthropic.ToolUseBlock;
+
+  let text: string;
+  let toolUse: Anthropic.ToolUseBlock | null = null;
+  if (toolResult) {
+    const result = typeof toolResult.content === 'string' ? toolResult.content : JSON.stringify(toolResult.content);
+    text = `Tool result: ${result.replace(/\n/g, ' | ')}`;
+  } else if (directive) {
+    text = 'One sec, let me check. ';
+    toolUse = mockToolUse(directive[1], directive[2] ? JSON.parse(directive[2]) : {});
+  } else if (wantsPerson) {
+    text = 'Sure, let me connect you.';
+    toolUse = mockToolUse('transfer_to_human', { reason: 'Caller asked for a person' });
+  } else if (wantsBye) {
+    text = 'Thanks for calling, have a great day!';
+    toolUse = mockToolUse('end_call', {});
+  } else {
+    text = `Gotcha, you said ${lastText.slice(0, 60)}. How can I help with that?`;
+  }
 
   const done = (async (): Promise<Reply> => {
     for (const word of text.split(/(?<= )/)) {
-      await new Promise((r) => setTimeout(r, 40));
+      await new Promise((r) => setTimeout(r, toolResult ? 2 : 40));
       if (aborted) throw new Error('aborted');
       onText(word);
     }

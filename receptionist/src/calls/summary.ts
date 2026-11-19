@@ -1,10 +1,8 @@
-import twilio from 'twilio';
 import { config } from '../config.js';
 import { leadStore } from '../leads/store.js';
 import { summarizeCall } from '../llm/claude.js';
 import type { Transcript } from '../logging/transcript.js';
-
-const twilioClient = twilio(config.twilioAccountSid, config.twilioAuthToken);
+import { sendSms } from '../twilio/sms.js';
 
 export async function sendCallSummary(opts: {
   callSid: string;
@@ -32,10 +30,5 @@ export async function sendCallSummary(opts: {
   const leadLine = lead ? `\nLead: ${lead.name}, ${lead.phone}, ${lead.reason}` : '';
   const body = `Call from ${opts.from} (~${minutes} min, ${opts.outcome}):\n${summary}${leadLine}`.slice(0, 1500);
 
-  if (config.disableSms) {
-    console.log(`[${opts.callSid}] SMS disabled, would have sent:\n${body}`);
-    return;
-  }
-  await twilioClient.messages.create({ from: config.twilioPhoneNumber, to: config.ownerCellNumber, body });
-  console.log(`[${opts.callSid}] summary texted to owner`);
+  await sendSms(config.ownerCellNumber, body, `[${opts.callSid}] call summary:`);
 }

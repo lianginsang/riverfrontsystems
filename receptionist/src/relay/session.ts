@@ -1,5 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { WebSocket } from 'ws';
+import { upcomingAvailabilityContext } from '../bookings/service.js';
 import { sendCallSummary } from '../calls/summary.js';
 import { streamReply, type ReplyStream } from '../llm/claude.js';
 import { runTool } from '../llm/tools.js';
@@ -7,6 +8,9 @@ import { Transcript } from '../logging/transcript.js';
 import type { Handoff, IncomingMessage, OutgoingMessage, SetupMessage } from './types.js';
 
 const MAX_TOOL_ROUNDS = 4;
+// How long the first reply will wait for open times to finish loading. They load
+// while the welcome greeting plays, so this almost never waits at all.
+const AVAILABILITY_WAIT_MS = 1_500;
 
 export const sessions = new Map<string, CallSession>();
 
@@ -26,6 +30,10 @@ export class CallSession {
   private consecutiveFailures = 0;
   // When the latest final caller prompt arrived; relay events are timed against it.
   private lastPromptAt?: number;
+  // Next three days of open times, loaded at setup for the first user message.
+  private readonly availability: Promise<string>;
+  // Prompts are handled one at a time so the first one can wait for availability.
+  private prompts: Promise<void> = Promise.resolve();
   private outcome = 'caller hung up';
   private ending = false;
   private finished = false;
@@ -35,6 +43,7 @@ export class CallSession {
     this.from = setup.from;
     this.transcript = new Transcript(setup.callSid);
     this.transcript.log({ kind: 'call_start', from: setup.from, to: setup.to });
+    this.availability = upcomingAvailabilityContext();
   }
 
   handle(msg: IncomingMessage): void {
@@ -42,14 +51,14 @@ export class CallSession {
       case 'prompt':
         if (msg.last === false) return; // partial prompt; wait for the final one
         this.lastPromptAt = Date.now();
-        this.onPrompt(msg.voicePrompt);
+        this.queuePrompt(msg.voicePrompt);
         break;
       case 'interrupt':
         this.transcript.log({ kind: 'interrupted', spoken: msg.utteranceUntilInterrupt });
         this.cancelTurn(msg.utteranceUntilInterrupt);
         break;
       case 'dtmf':
-        this.onPrompt(`(caller pressed ${msg.digit} on the keypad)`);
+        this.queuePrompt(`(caller pressed ${msg.digit} on the keypad)`);
         break;
       case 'error':
         this.transcript.log({ kind: 'error', message: `ConversationRelay: ${msg.description}` });
@@ -71,7 +80,11 @@ export class CallSession {
     if (this.ws.readyState === this.ws.OPEN) this.ws.send(JSON.stringify(msg));
   }
 
-  private onPrompt(text: string): void {
+  private queuePrompt(text: string): void {
+    this.prompts = this.prompts.then(() => this.onPrompt(text));
+  }
+
+  private async onPrompt(text: string): Promise<void> {
     if (this.ending || !text.trim()) return;
     // The caller spoke while a reply was still generating: drop the unfinished reply.
     if (this.current) this.cancelTurn();
@@ -79,10 +92,20 @@ export class CallSession {
     this.transcript.log({ kind: 'caller', text });
     // Per-call context goes in the first user message, not the system prompt, so the
     // system prompt stays identical across calls and keeps hitting the cache.
-    const content =
-      this.history.length === 0
-        ? `[Call info: caller ID ${this.from}. Current time ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} Eastern.]\n${text}`
-        : text;
+    let content = text;
+    if (this.history.length === 0) {
+      const now = new Date();
+      const availability = await Promise.race([
+        this.availability,
+        new Promise<string>((resolve) =>
+          setTimeout(() => resolve('Open times are still loading. Use find_open_slots if the caller wants to book.'), AVAILABILITY_WAIT_MS),
+        ),
+      ]);
+      if (this.ending) return;
+      content =
+        `[Call info: caller ID ${this.from}. Now: ${now.toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} Eastern.\n` +
+        `${availability}]\n${text}`;
+    }
     this.appendUser(content);
     this.turnStart = this.history.length;
     void this.runTurn(++this.turnId);
